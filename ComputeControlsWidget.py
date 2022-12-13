@@ -10,9 +10,11 @@ class ComputeControlsWidget(qtw.QWidget):
         super().__init__(*args, **kwargs)
 
         self._numberOfPlayers = len(data)
-        self._currentComputeMethodIndex = 0
         self._currentTeamSize = 1
-        self._computeMethods = {'Brute Force': 0, 'Random': 1, 'Best of 1 Million Random': 2}
+        self._currentComputeMethodIndex = 0
+        self._computeMethods = {'Brute Force': 0, 'Random': 1}
+        self._currentRandomSizeIndex = 0
+        self._randomSizes = {f'{pow(10, v):,}' : v for v in range(10)}
         self._currentProgressBarValue = 0
 
         self.CC_ui = Ui_Form()
@@ -20,6 +22,10 @@ class ComputeControlsWidget(qtw.QWidget):
 
         self.CC_ui.computeMethod_comboBox.addItems([*self._computeMethods.keys()])
         self.CC_ui.computeMethod_comboBox.currentIndexChanged.connect(self.compute_index_changed)
+
+        self.CC_ui.randomSize_comboBox.addItems([*self._randomSizes.keys()])
+        self.CC_ui.randomSize_comboBox.currentIndexChanged.connect(self.randomSize_index_changed)
+        self.CC_ui.randomSize_comboBox.setEnabled(False)
 
         self.CC_ui.teamSize_spinBox.setMaximum(self._numberOfPlayers)
         self.CC_ui.teamSize_spinBox.valueChanged.connect(self.team_size_changed)
@@ -50,6 +56,10 @@ class ComputeControlsWidget(qtw.QWidget):
     @property
     def getComputeMethodIndex(self):
         return self._currentComputeMethodIndex
+
+    @property
+    def getRandomSizeIndex(self):
+        return self._currentRandomSizeIndex
     
     @property
     def currentProgressBarValue(self):
@@ -72,6 +82,14 @@ class ComputeControlsWidget(qtw.QWidget):
     def compute_index_changed(self, compute_index):
         self._currentComputeMethodIndex = compute_index
         print(self._currentComputeMethodIndex)
+        if self._currentComputeMethodIndex == 0:
+            self.CC_ui.randomSize_comboBox.setEnabled(False)
+        else:
+            self.CC_ui.randomSize_comboBox.setEnabled(True)
+    
+    def randomSize_index_changed(self, randomSize_index):
+        self._currentRandomSizeIndex = randomSize_index
+        print(self._currentRandomSizeIndex)
 
     def change_compute_label_info(self):
         if self._numberOfPlayers % self._currentTeamSize == 0:

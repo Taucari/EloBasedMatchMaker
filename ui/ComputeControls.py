@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(400, 178)
+        Form.resize(372, 204)
         self.gridLayout = QtWidgets.QGridLayout(Form)
         self.gridLayout.setObjectName("gridLayout")
         self.computeControls_groupBox = QtWidgets.QGroupBox(Form)
@@ -39,17 +39,23 @@ class Ui_Form(object):
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.teamSize_spinBox)
         self.compute_pushButton = QtWidgets.QPushButton(self.computeControls_groupBox)
         self.compute_pushButton.setObjectName("compute_pushButton")
-        self.formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.compute_pushButton)
+        self.formLayout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.compute_pushButton)
         self.compute_progressBar = QtWidgets.QProgressBar(self.computeControls_groupBox)
         self.compute_progressBar.setAutoFillBackground(False)
         self.compute_progressBar.setProperty("value", 25)
         self.compute_progressBar.setTextVisible(True)
         self.compute_progressBar.setInvertedAppearance(False)
         self.compute_progressBar.setObjectName("compute_progressBar")
-        self.formLayout.setWidget(5, QtWidgets.QFormLayout.FieldRole, self.compute_progressBar)
+        self.formLayout.setWidget(6, QtWidgets.QFormLayout.FieldRole, self.compute_progressBar)
         self.compute_info_label = QtWidgets.QLabel(self.computeControls_groupBox)
         self.compute_info_label.setObjectName("compute_info_label")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.SpanningRole, self.compute_info_label)
+        self.randomSize_comboBox = QtWidgets.QComboBox(self.computeControls_groupBox)
+        self.randomSize_comboBox.setObjectName("randomSize_comboBox")
+        self.formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.randomSize_comboBox)
+        self.label = QtWidgets.QLabel(self.computeControls_groupBox)
+        self.label.setObjectName("label")
+        self.formLayout.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.label)
         self.gridLayout.addWidget(self.computeControls_groupBox, 1, 0, 1, 1)
 
         self.retranslateUi(Form)
@@ -63,6 +69,7 @@ class Ui_Form(object):
         self.teamSize_label.setText(_translate("Form", "Team Size"))
         self.compute_pushButton.setText(_translate("Form", "Compute!"))
         self.compute_info_label.setText(_translate("Form", "Total number of team variants:"))
+        self.label.setText(_translate("Form", "Random Size"))
 
 
 if __name__ == "__main__":
