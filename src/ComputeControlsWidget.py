@@ -4,11 +4,19 @@ from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtCore as qtc
 
 from math import factorial
+from random import shuffle
+
+import statistics as stats
+import numpy as np
 
 class ComputeControlsWidget(qtw.QWidget):
-    def __init__(self, *args, data={'Player 1': 0}, **kwargs):
+
+    submitted_text = qtc.pyqtSignal(str)
+
+    def __init__(self, *args, data=[['', 0]], **kwargs):
         super().__init__(*args, **kwargs)
 
+        self._data = data
         self._numberOfPlayers = len(data)
         self._currentTeamSize = 1
         self._currentComputeMethodIndex = 0
@@ -32,22 +40,43 @@ class ComputeControlsWidget(qtw.QWidget):
 
         self.change_compute_label_info()
 
-        self.CC_ui.compute_pushButton.clicked.connect(self.increaseProgressBarTest)
+        self.CC_ui.compute_pushButton.clicked.connect(self.main_compute)
 
         #TEST LINE
-        self.CC_ui.compute_progressBar.setValue(self._currentProgressBarValue)
+        #self.CC_ui.compute_progressBar.setValue(self._currentProgressBarValue)
     
     @property
-    def numberOfPlayers(self):
-        return self._numberOfPlayers
+    def data(self):
+        return self._data
     
-    @numberOfPlayers.setter
-    def numberOfPlayers(self, number):
-        if isinstance(number, int):
-            self._numberOfPlayers = number
-            self.CC_ui.teamSize_spinBox.setMaximum(self._numberOfPlayers)
-        else:
-            raise TypeError(f"Only integers are allowed when setting _NumberOfPlayers. You set {number}.")
+    @data.setter
+    def data(self, data):
+        if not isinstance(data, list):
+            raise TypeError(f'Must be a list of lists. Instead, the 1 dimension is a {type(data)}')
+        for row in data:
+            if not isinstance(row, list):
+                raise TypeError(f'Each row must be a list.Instead, the 1 dimension is a {type(row)}')
+            if len(row) != 2:
+                raise TypeError(f'TypeError: This table has two columns and therefore each row can only have two items, this row is {len(row)} items long.')
+            if not isinstance(row[0], str):
+                raise TypeError(f'Item in the Name Column must be a string. Instead it is {row[0]}, which is a {type(row[0])}')
+            if not isinstance(row[1], int):
+                raise TypeError(f'Item in the Elo Column must be an int. Instead it is {row[1]}, which is a {type(row[1])}')
+        self._data = data
+        self._numberOfPlayers = len(data)
+        self.CC_ui.teamSize_spinBox.setMaximum(self._numberOfPlayers)
+    
+    # @property
+    # def numberOfPlayers(self):
+    #     return self._numberOfPlayers
+    
+    # @numberOfPlayers.setter
+    # def numberOfPlayers(self, number):
+    #     if isinstance(number, int):
+    #         self._numberOfPlayers = number
+    #         self.CC_ui.teamSize_spinBox.setMaximum(self._numberOfPlayers)
+    #     else:
+    #         raise TypeError(f"Only integers are allowed when setting _NumberOfPlayers. You set {number}.")
 
     @property
     def getTeamSize(self):
@@ -81,7 +110,6 @@ class ComputeControlsWidget(qtw.QWidget):
     
     def compute_index_changed(self, compute_index):
         self._currentComputeMethodIndex = compute_index
-        print(self._currentComputeMethodIndex)
         if self._currentComputeMethodIndex == 0:
             self.CC_ui.randomSize_comboBox.setEnabled(False)
         else:
@@ -89,7 +117,6 @@ class ComputeControlsWidget(qtw.QWidget):
     
     def randomSize_index_changed(self, randomSize_index):
         self._currentRandomSizeIndex = randomSize_index
-        print(self._currentRandomSizeIndex)
 
     def change_compute_label_info(self):
         if self._numberOfPlayers % self._currentTeamSize == 0:
@@ -100,7 +127,7 @@ class ComputeControlsWidget(qtw.QWidget):
             self.CC_ui.compute_pushButton.setEnabled(True)
         else:
             # self.CC_ui.compute_info_label.setText(f"{self._numberOfPlayers} players do not split equally into teams of {self._currentTeamSize} players.")
-            self.CC_ui.compute_info_label.setText(f"{self._numberOfPlayers} players do not split equally into \nteams of {self._currentTeamSize} players.")
+            self.CC_ui.compute_info_label.setText(f"{self._numberOfPlayers} players do not split equally into teams \nof {self._currentTeamSize} players.")
             self.CC_ui.compute_pushButton.setEnabled(False)
     
     def increaseProgressBarTest(self):
@@ -112,12 +139,106 @@ class ComputeControlsWidget(qtw.QWidget):
             new_value = current_value + 10
         self._currentProgressBarValue = new_value
         self.CC_ui.compute_progressBar.setValue(self._currentProgressBarValue)
+    
+    def main_compute(self):
+        data = {i[0]: i[1] for i in self._data}
 
+        message = []
+        if self._currentComputeMethodIndex == 0:
+            team_list = self.standard_compute(data, self._currentTeamSize)
+            message.append("Standard Team Assignment")
+        elif self._currentComputeMethodIndex == 1 and self._currentRandomSizeIndex == 0:
+            team_list = self.random_compute(data, self._currentTeamSize)
+            message.append("Random Team Assignment")
+        else:
+            team_list = self.n_compute(data, self._currentTeamSize)
+            message.append(f"Best of {pow(10, self._currentRandomSizeIndex):,} Random Team Assignments")
+
+        player_names = [*data.keys()]
+        global_elo = []
+        # noinspection PyUnboundLocalVariable
+        for team in team_list:
+            message.append("\n")
+            message.append("Team " + str(team_list.index(team) + 1) + ":")
+            team_elo = []
+            for player in team:
+                message.append("↳ " + str(player_names[player]))
+                team_elo.append(data[player_names[player]])
+            current_team_elo = sum(team_elo) / len(team_elo)
+            message.append("= Average Team Elo: " + str(current_team_elo))
+            global_elo.append(current_team_elo)
+        message.append("\n")
+        message.append("=> Group Elo: " + str(sum(global_elo) / len(global_elo)))
+        message.append("=> Group StDev: " + str(stats.stdev(global_elo)))
+        final = '\n'.join(message)
+        self.submitted_text.emit(final)
+    
+    def standard_compute(self, data, team_size):
+        return [[]]
+    
+    def random_compute(self, data, team_size):
+        index = [*range(len(data))]
+        shuffle(index)
+        casted = self.cast_teams(index, team_size)
+        return casted
+    
+    def n_compute(self, data, team_size):
+
+        def replace_dict_keys_with_incremental_value(data):
+            new = {}
+            current = 0
+            for values in data.values():
+                new[current] = values
+                current += 1
+            return new
+
+
+        def np_calculate_iteration_mean_and_stdev(iteration):
+            # Needs to Calculate Stdev for each iteration, e.g.:
+            # [[1108 1220 1231 1231]
+            #  [1266 1273 1285 1349]
+            #  [1358 1362 1519 1621]
+            #  [1467 1543 1647 1851]]
+            return np.std(np.apply_along_axis(np.sum, 1, iteration))
+
+        length = self._numberOfPlayers
+        repetition = pow(10, self._currentRandomSizeIndex)
+
+        stuff = np.tile(np.arange(length), (repetition, 1))
+        rng = np.random.default_rng()
+        temp = rng.permuted(stuff, axis=1, out=stuff)
+
+        output = np.reshape(temp, (repetition, int(length / team_size), team_size))
+        np.ascontiguousarray(output, dtype=np.ubyte)
+        redone = np.sort(output, kind='heapsort')
+        order = redone[:, :, 0].argsort()
+        rearranged = np.take_along_axis(redone, order[:, :, None], axis=1)
+
+        unique = np.unique(rearranged, axis=0)
+
+        remapper = replace_dict_keys_with_incremental_value(data)
+
+        remapped = np.vectorize(remapper.__getitem__)(unique)
+
+        stds = np.empty(len(remapped))
+        for i in range(len(remapped)):
+            iteration = remapped[i]
+            stds[i] = np_calculate_iteration_mean_and_stdev(iteration)
+
+        calculated = np.argmin(stds)
+        return unique[calculated].tolist()
+
+    def cast_teams(self, index, team_size):
+        return [index[i:i + team_size] for i in range(0, len(index), team_size)]
+
+
+
+    
 
 if __name__ == '__main__':
     app = qtw.QApplication([])
 
-    widget = ComputeControlsWidget(data = {'Player 1': 0, 'Player 2': 0, 'Player 3': 0, 'Player 4': 0, 'Player 5': 0, 'Player 6': 0})
+    widget = ComputeControlsWidget(data = [['Player 1', 0], ['Player 2', 0], ['Player 3', 0], ['Player 4', 0], ['Player 5', 0], ['Player 6', 0]])
     widget.show()
 
     app.exec_()

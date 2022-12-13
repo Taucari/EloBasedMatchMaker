@@ -37,7 +37,7 @@ class ComputeOutputWidget(qtw.QWidget):
         return self._outputData
     
     @outputData.setter
-    def outputText(self, data):
+    def outputData(self, data):
         if isinstance(data, list):
             self._outputData = data
 

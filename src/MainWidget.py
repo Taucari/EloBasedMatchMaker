@@ -21,6 +21,7 @@ class MainWidget(qtw.QWidget):
 
         self.setLayout(layout)
         self.input_table.submitted.connect(self.table_changed)
+        self.control.submitted_text.connect(self.compute_finished)
 
         
     @qtc.pyqtSlot(list)
@@ -28,7 +29,11 @@ class MainWidget(qtw.QWidget):
         # Passes table changes to control
 
         # self.control.numberOfPlayers = int(len(new_table))\
-        self.control.numberOfPlayers = int(len(new_table))
+        self.control.data = new_table
+    
+    @qtc.pyqtSlot(str)
+    def compute_finished(self, text):
+        self.output.outputText = text
 
 
 
