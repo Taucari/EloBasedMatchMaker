@@ -6,12 +6,11 @@ from PyQt5 import QtCore as qtc
 from math import factorial
 from random import shuffle
 
-import statistics as stats
 import numpy as np
 
 class ComputeControlsWidget(qtw.QWidget):
 
-    submitted_text = qtc.pyqtSignal(str)
+    submitted_text = qtc.pyqtSignal(int, int, list)
 
     def __init__(self, *args, data=[['', 0]], **kwargs):
         super().__init__(*args, **kwargs)
@@ -143,35 +142,14 @@ class ComputeControlsWidget(qtw.QWidget):
     def main_compute(self):
         data = {i[0]: i[1] for i in self._data}
 
-        message = []
         if self._currentComputeMethodIndex == 0:
             team_list = self.standard_compute(data, self._currentTeamSize)
-            message.append("Standard Team Assignment")
         elif self._currentComputeMethodIndex == 1 and self._currentRandomSizeIndex == 0:
             team_list = self.random_compute(data, self._currentTeamSize)
-            message.append("Random Team Assignment")
         else:
             team_list = self.n_compute(data, self._currentTeamSize)
-            message.append(f"Best of {pow(10, self._currentRandomSizeIndex):,} Random Team Assignments")
 
-        player_names = [*data.keys()]
-        global_elo = []
-        # noinspection PyUnboundLocalVariable
-        for team in team_list:
-            message.append("\n")
-            message.append("Team " + str(team_list.index(team) + 1) + ":")
-            team_elo = []
-            for player in team:
-                message.append("↳ " + str(player_names[player]))
-                team_elo.append(data[player_names[player]])
-            current_team_elo = sum(team_elo) / len(team_elo)
-            message.append("= Average Team Elo: " + str(current_team_elo))
-            global_elo.append(current_team_elo)
-        message.append("\n")
-        message.append("=> Group Elo: " + str(sum(global_elo) / len(global_elo)))
-        message.append("=> Group StDev: " + str(stats.stdev(global_elo)))
-        final = '\n'.join(message)
-        self.submitted_text.emit(final)
+        self.submitted_text.emit(self._currentComputeMethodIndex, self._currentRandomSizeIndex, team_list)
     
     def standard_compute(self, data, team_size):
         return [[]]

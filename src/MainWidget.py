@@ -27,13 +27,14 @@ class MainWidget(qtw.QWidget):
     @qtc.pyqtSlot(list)
     def table_changed(self, new_table):
         # Passes table changes to control
-
-        # self.control.numberOfPlayers = int(len(new_table))\
         self.control.data = new_table
+        self.output.inputPlayerData = new_table
     
-    @qtc.pyqtSlot(str)
-    def compute_finished(self, text):
-        self.output.outputText = text
+    @qtc.pyqtSlot(int, int, list)
+    def compute_finished(self, computeMode, randomSize, data):
+        self.output.computeMode = computeMode
+        self.output.randomSize = randomSize
+        self.output.outputData = data
 
 
 
